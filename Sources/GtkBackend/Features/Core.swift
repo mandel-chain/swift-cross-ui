@@ -80,6 +80,11 @@ extension GtkBackend: BackendFeatures.Core {
             Unmanaged<ThreadActionContext>.passRetained(action).toOpaque(),
             { _ in }
         )
+
+        // GLib only wakes the main loop for sources added from other threads.
+        // This can be called on the main thread while the main loop is still
+        // in its poll (on macOS, GDK's poll runs MainActor jobs), so wake it.
+        g_main_context_wakeup(nil)
     }
 
     private static func runInMainThread(
