@@ -29,9 +29,14 @@ extension GtkBackend: BackendFeatures.CoreWindowing {
 
         window.setChild(Gtk.Box())
 
-        window.notifyIsActive = { _ in
-            self.rootEnvironmentChangeHandler?()
-        }
+        // Upstream tells the app of every change of the window's is-active,
+        // which recomputes the root environment (appPhase, scenePhase) and
+        // lays out every window again. A menu's popup, a popover and a
+        // tooltip each take the window's active state and give it back, so
+        // every menu cost two layouts of the whole window, which with a
+        // large window kept GTK from mapping the popup at all. The phases
+        // are read at launch and left as they are: Sietch doesn't read them.
+        window.notifyIsActive = nil
 
         return window
     }

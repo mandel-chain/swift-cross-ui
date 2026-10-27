@@ -61,7 +61,7 @@ public class ViewGraphNode<NodeView: View, Backend: BaseAppBackend>: ModelObserv
     private var dynamicPropertyUpdater: DynamicPropertyUpdater<NodeView>
 
     /// Used by the ``ModelObserver`` protocol to prevent duplicate view updates.
-    var currentViewModelObservationID: UUID?
+    var currentViewModelObservationID: UInt64?
 
     /// Creates a node for a given view while also creating the nodes for its children, creating
     /// the view's widget, and starting to observe its state for changes.

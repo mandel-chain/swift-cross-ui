@@ -21,7 +21,7 @@ class _App<AppRoot: App>: ModelObserver {
     var dynamicPropertyUpdater: DynamicPropertyUpdater<AppRoot>
 
     /// Used by the ``ModelObserver`` protocol to prevent duplicate view updates.
-    var currentViewModelObservationID: UUID?
+    var currentViewModelObservationID: UInt64?
 
     /// Wraps a user's app implementation.
     init(_ app: AppRoot, backend: AppRoot.Backend) {

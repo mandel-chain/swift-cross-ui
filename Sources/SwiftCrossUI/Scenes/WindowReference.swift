@@ -21,7 +21,7 @@ final class WindowReference<SceneType: WindowingScene>: ModelObserver {
     private var preferredColorScheme: ColorScheme?
 
     /// Used by the ``ModelObserver`` protocol to prevent duplicate view updates.
-    var currentViewModelObservationID: UUID?
+    var currentViewModelObservationID: UInt64?
 
     /// - Parameters:
     ///   - closeHandler: The action to perform when the window is closed. Should

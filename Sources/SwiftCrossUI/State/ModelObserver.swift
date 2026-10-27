@@ -19,7 +19,7 @@ import ObservationPolyfillCore
 @MainActor
 protocol ModelObserver: AnyObject, Sendable {
     /// Used by the ``ModelObserver`` protocol to prevent duplicate view updates.
-    var currentViewModelObservationID: UUID? { get set }
+    var currentViewModelObservationID: UInt64? { get set }
 
     /// This method is called at most once after a call to `observe()` if an object conforming to
     /// `Observable` used in the `computation` closure of the last call to ``observe(with:_:)``
@@ -31,6 +31,13 @@ protocol ModelObserver: AnyObject, Sendable {
     /// - Parameter backend: The backend passed to the last call to ``observe(with:_:)``.
     func viewModelDidChange<Backend: BaseAppBackend>(backend: Backend)
 }
+
+/// The observation IDs handed out so far. Each call to ``ModelObserver/observe(with:_:)``
+/// takes the next one. A counter, not a UUID: every view node observes on every layout, and
+/// on Linux Foundation's UUID generator opens /dev/urandom for each one, which was about half
+/// of a layout pass of a large window.
+@MainActor
+private var lastObservationID: UInt64 = 0
 
 extension ModelObserver {
     /// Performs a computation and tracks accesses to properties of objects conforming to
@@ -52,7 +59,8 @@ extension ModelObserver {
         with backend: Backend,
         _ computation: () -> Result
     ) -> Result {
-        let observationTrackingID = UUID()
+        lastObservationID += 1
+        let observationTrackingID = lastObservationID
         self.currentViewModelObservationID = observationTrackingID
         return ObservationPolyfillCore.withObservationTracking {
             computation()
