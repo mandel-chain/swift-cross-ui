@@ -82,7 +82,7 @@ extension GtkBackend: BackendFeatures.Core {
         )
     }
 
-    private static func runInMainThread(
+    static func runInMainThread(
         afterMilliseconds delay: Int,
         action: @escaping @MainActor () -> Void
     ) {

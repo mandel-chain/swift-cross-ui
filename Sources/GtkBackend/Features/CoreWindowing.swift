@@ -29,16 +29,37 @@ extension GtkBackend: BackendFeatures.CoreWindowing {
 
         window.setChild(Gtk.Box())
 
-        // Upstream tells the app of every change of the window's is-active,
-        // which recomputes the root environment (appPhase, scenePhase) and
-        // lays out every window again. A menu's popup, a popover and a
-        // tooltip each take the window's active state and give it back, so
-        // every menu cost two layouts of the whole window, which with a
-        // large window kept GTK from mapping the popup at all. The phases
-        // are read at launch and left as they are: Sietch doesn't read them.
-        window.notifyIsActive = nil
+        // Telling the app of a change of the window's is-active recomputes
+        // the root environment (appPhase, scenePhase) and lays out every
+        // window again. A menu's popup takes the window's active state and
+        // gives it back, twice, within a moment, and with a large window
+        // laying it all out on each change kept GTK from mapping the popup
+        // at all. So the app hears only of changes that settle.
+        window.notifyIsActive = { [weak self] _ in
+            self?.windowActivationChanged()
+        }
 
         return window
+    }
+
+    /// How long a change of a window's active state has to last before the
+    /// app hears of it, so that a popup's taking it and giving it back
+    /// cancel out.
+    static let activationSettleMilliseconds = 100
+
+    /// Tells the app that which windows are active has changed, once no window
+    /// has changed its active state for ``activationSettleMilliseconds``, and
+    /// only if the active windows differ from those the app last heard of.
+    func windowActivationChanged() {
+        activationChangeGeneration &+= 1
+        let generation = activationChangeGeneration
+        Self.runInMainThread(afterMilliseconds: Self.activationSettleMilliseconds) { [weak self] in
+            guard let self, generation == activationChangeGeneration else { return }
+            let activeWindows = Set(windows.filter(\.isActive).map(ObjectIdentifier.init))
+            guard activeWindows != reportedActiveWindows else { return }
+            reportedActiveWindows = activeWindows
+            rootEnvironmentChangeHandler?()
+        }
     }
 
     public func updateWindow(_ window: Window, environment: EnvironmentValues) {

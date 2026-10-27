@@ -27,6 +27,14 @@ public final class GtkBackend {
 
     var rootEnvironmentChangeHandler: (() -> Void)?
 
+    /// The windows that were active when the app last heard of a change of
+    /// active state. Empty at first, as no window is active when it's created.
+    var reportedActiveWindows: Set<ObjectIdentifier> = []
+
+    /// Counts changes of the windows' active states, so that only the check
+    /// after the latest one runs.
+    var activationChangeGeneration: UInt64 = 0
+
     var measurementCustomLabel: CustomLabel!
 
     var borderedButtonPadding: SIMD2<Int>?
